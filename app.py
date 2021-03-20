@@ -48,12 +48,24 @@ def register():
 
 @app.route('/onRegister', methods=['POST'])                             #registerPost
 def new_user():
+
+    reg_object = request.get_json()
+    username = reg_object['username']
+    password = reg_object['inpPassword']
+
+    print(username)
+    print(password)
+
+    """
     username = request.get_json('username')
     password = request.get_json('inpPassword')
+    """
 
     signup = User(username=username, password=generate_password_hash(password, method='sha256'))
     db.session.add(signup)
     db.session.commit()
+
+    return jsonify({'result': "ok"})
 
     """
     user = User(username=username)
@@ -63,7 +75,7 @@ def new_user():
     return jsonify({'username': user.username}), 201, {'Location': url_for('get_user', id=user.id, _external=True)}
     """
 
-    return redirect(url_for('/login'))
+    #return redirect(url_for('/login'))
 
 """
     json_data = request.json
@@ -87,6 +99,12 @@ def new_user():
 @app.route('/landing')                                                  #landingSite    -   @login.required?
 def landing():
     return send_from_directory('templates', 'index.html')
+
+
+@app.route('/upload')                                                  #upload
+def upload():
+    file = request.files['inputFile']
+    return file.filename
 
 
 @app.route('/logout')                                                  #MAJD KELL logoutSite - upd dehogy kell -> redirect
