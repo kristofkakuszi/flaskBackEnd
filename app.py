@@ -1,19 +1,18 @@
-from flask import Flask, send_from_directory, request, jsonify, url_for, redirect, flash, session
-from flask_login import LoginManager, UserMixin, login_user
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from passlib.apps import custom_app_context as pwd_context
-from flask import Blueprint
-from sqlalchemy import engine
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import login_user, logout_user, current_user
-#from app import login
-from werkzeug.urls import url_parse
+import random
+import sqlite3
+import string
 
+from flask import Flask, send_from_directory, request, jsonify, url_for, redirect
+from flask_login import LoginManager, UserMixin
+from flask_login import login_user, current_user
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash
+
+from forms import LoginForm
 
 app = Flask(__name__)
-login = LoginManager(app)
-login.login_view = 'login'
+
+login_manager = LoginManager(app)
 
 app.config['SECRET_KEY'] = 'plsWork'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -21,7 +20,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'hello'
 
 db = SQLAlchemy(app)
-#migrate = Migrate(app, db)
+
+
 
 
 class User(UserMixin,db.Model):
@@ -29,23 +29,28 @@ class User(UserMixin,db.Model):
     username = db.Column(db.String(32), index=True)
     password = db.Column(db.String(128))
 
+def __init__(self, username, password):
+    self.username = username
+    self.password = password
+
+
+
 
 db.create_all()
 db.session.commit()
 
-"""
-db.init_app(app)                                                    #ez kell?
-login_manager = LoginManager(app)
-login_manager.init_app(app)
-"""
 
-
-@login.user_loader                                          #ez kell?
-#def load_user(user_id):
+@login_manager.user_loader
 def load_user(id):
-    return User.query.get(int(id))
-    #return User.get(user_id)
-    #return User.query.get(int(user_id))
+   conn = sqlite3.connect('app.db')
+   curs = conn.cursor()
+   curs.execute("SELECT * from app where id = (?)",[id])
+   lu = curs.fetchone()
+   if lu is None:
+      print("what")
+   else:
+       print("fck")
+       return User(int(lu[0]))
 
 
 @app.route('/', methods=['GET'])                                        #betolteshezKell meg amugy index
@@ -58,15 +63,16 @@ def login():
     return send_from_directory('templates', 'index.html')
 
 
-@app.route('/onLogin', methods=['GET', 'POST'])                         #loginPost
+@app.route('/onLogin', methods=['POST'])                         #loginPost
 def login_post():
 
-    #form = LoginForm()
-    #if form.validate_on_submit():
-    #    login_user(user)
-    #    flask.flash('Logged in successfully.')
-    #    next = flask.request.args.get('next')
-
+    form = LoginForm()
+    if form.validate_on_submit():
+        conn = sqlite3.connect('app.db')
+        curs = conn.cursor()
+        curs.execute("SELECT * FROM user where username = (?)",)
+        user = list(curs.fetchone())
+        Us = load_user(user[0])
 
 
     form = LoginForm()
@@ -80,22 +86,43 @@ def login_post():
             print("nem jok az adatok")
         else:
             print("jok az adatok")
-
     #login_user(user)
 
 
-    """
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        user = find_user(username)
 
-        if user and password == user.password:
-            #return redirect("landing")
-        else:
-            flash("incorrect username or password.")
-            #return redirect("login")
-    """
+"""
+    if(): #ha a login okes -> gen token
+
+        length_of_string = 128
+
+        letters_and_digits = string.ascii_lowercase + string.digits
+        token = ""
+
+        for number in range(length_of_string):
+            token += random.choice(letters_and_digits)
+        #print(token)
+
+
+        token = User(token=token)
+        user = User.query.filter_by(username=username).first()
+        db.session.add(token)
+        db.session.commit()
+        return jsonify({'result': token})
+"""
+
+""" egyreszt login
+        (ha benne van a db-be akkor tovabbmegy)
+            ha tovabbment akkor generalok egy tokent(random generalt ) es berakom a user melle, ezt pedig visszaadom a uira return jsonifyal
+            
+            ezt a tokent lementem egy valtozoba azt pedig az uin lementem egy servicebe
+            ezt azert kell mert minden egyes keresnel mikor kommunikalok a backendel beleteszem az auth headerjebe
+            ez kell uploadnal majd hogy tudjam kihez tartozik (melyik userhez)
+            ekkor a keres headerjebe ott lesz a token ezt pedig lekerem megnezem hogy egyezik e vele es akkor hajtom csak vegre ha igen
+            ha senkihez sem tartozik akkor nincs bejelntkezve akkor elutasitom a kerest
+            
+        (ha nincs benne akkor error)
+    
+"""
 
 
 @app.route('/register')                                                 #registerSite
@@ -129,7 +156,7 @@ def new_user():
     if user:
         print("letezik ilyen")
         #flash("User already exists", "warning")
-        return redirect(url_for('login'))                                     # nem mukodik
+        return redirect(url_for('register'))                                     # nem mukodik viszont ez miatt nem megy at loginra
     else:
         db.session.add(signup)
         db.session.commit()
@@ -143,16 +170,24 @@ def landing():
     return send_from_directory('templates', 'index.html')
 
 
-#@app.route('/upload')                                                  #upload
-#def upload():
-#    file = request.files['inputFile']
-#    return file.filename
+@app.route('/upload', methods=['POST'])                                                  #upload
+def upload():
+    file = request.files['inputFile']
+
+    #return file.filename
 
 
-#@app.route('/logout')                                                  #MAJD KELL logoutSite - upd dehogy kell -> redirect
+
+#@app.route('/logout')                                                  #token off
 #def logout():
     #return redirect(url_for('/'))
     #return send_from_directory('templates', 'index.html')
+
+"""
+    a db-bol a userhez tartozo tokent azt nullazom
+    eloszor is megnezem hogy a logoutnal megkapom-e a tokent 
+    ha a token egyezik (benne van a db-be) akkor nullazom
+"""
 
 
 @app.route('/<path:filename>', methods=['GET'])                         #fajlok betolteseere szolgal
