@@ -40,7 +40,8 @@ class User(UserMixin,db.Model):
 class Images(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(300))
-    data = db.Column(db.LargeBinary)
+    #data = db.Column(db.LargeBinary)
+    fp = db.Column(db.String(264), unique=True)
 
 
 #db.create_all()
@@ -116,17 +117,16 @@ def login_post():
         return jsonify({'result': token})
 """
 
-@app.route('/register')                                                 #registerSite
+@app.route('/register')     #registerSite
 def register():
     return send_from_directory('templates', 'index.html')
 
-@app.route('/onRegister', methods=['GET','POST'])                             #registerPost
+@app.route('/onRegister', methods=['GET','POST'])       #registerPost
 def new_user():
-
+    # username = request.get_json('username')
     reg_object = request.get_json()
     username = reg_object['username']
     password = reg_object['inpPassword']
-    #username = request.get_json('username')
 
     signup = User(username=username, password=generate_password_hash(password, method='sha256'))
 
@@ -138,7 +138,6 @@ def new_user():
     else:
         db.session.add(signup)
         db.session.commit()
-
     return jsonify({'result': "sikeres reg"})
 
 
@@ -151,15 +150,25 @@ def landing():
 @app.route('/onUpload', methods=['POST'])                                                  #upload
 def upload():
 
-    file = request.files["file"]
     """
-    if request.method == 'POST':
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
-    """
-    newFile = Images(name=file.filename,data=file.read())
+    file = request.files['file']
+    text = request.form['name']
+
+    # ezzel azt cisnalja h elmentei azzal a nevvel csak kiterjesztes nelkul de ha a vegere odairok .jpg-t akkor okes
+    filename = text + ".jpg"
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+    newFile = Images(file.filename, fp=os.path.abspath(UPLOAD_FOLDER))
     db.session.add(newFile)
     db.session.commit()
+
     return jsonify({'result': "kepfeltoltes"})
+    """
+
+    if request.method == 'POST':
+        f = request.files['file']
+        f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
+        return 'file uploaded successfully'
 
 
 
