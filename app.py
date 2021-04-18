@@ -73,6 +73,16 @@ def login():
 @app.route('/onLogin', methods=['POST'])                         #loginPost
 def login_post():
 
+    username = request.form["username"]
+    password = request.form["password"]
+    conn = sqlite3.connect("app.db")
+    c = conn.cursor()
+
+
+
+
+
+    """
     form = LoginForm()
     if form.validate_on_submit():
         conn = sqlite3.connect('app.db')
@@ -96,7 +106,7 @@ def login_post():
     #login_user(user)
 
 
-
+    """
 """
     if(): #ha a login okes -> gen token
 
@@ -150,25 +160,22 @@ def landing():
 @app.route('/onUpload', methods=['POST'])                                                  #upload
 def upload():
 
-    """
-    file = request.files['file']
-    text = request.form['name']
+
+    file = request.files['thumbnail']
+    #text = request.form['name']
 
     # ezzel azt cisnalja h elmentei azzal a nevvel csak kiterjesztes nelkul de ha a vegere odairok .jpg-t akkor okes
-    filename = text + ".jpg"
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    #filename = text + ".jpg"
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
 
-    newFile = Images(file.filename, fp=os.path.abspath(UPLOAD_FOLDER))
+    newFile = Images(name=file.filename, fp=os.path.abspath(UPLOAD_FOLDER))
     db.session.add(newFile)
     db.session.commit()
 
     return jsonify({'result': "kepfeltoltes"})
-    """
 
-    if request.method == 'POST':
-        f = request.files['file']
-        f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
-        return 'file uploaded successfully'
+
+
 
 
 
