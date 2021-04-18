@@ -8,7 +8,7 @@ from flask_login import LoginManager, UserMixin
 from flask_login import login_user, current_user
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from forms import LoginForm
 
@@ -43,42 +43,33 @@ class Images(db.Model):
     #data = db.Column(db.LargeBinary)
     fp = db.Column(db.String(264), unique=True)
 
-
 #db.create_all()
 #db.session.commit()
 
 
-@login_manager.user_loader
-def load_user(id):
-   conn = sqlite3.connect('app.db')
-   curs = conn.cursor()
-   curs.execute("SELECT * from app where id = (?)",[id])
-   lu = curs.fetchone()
-   if lu is None:
-      print("what")
-   else:
-       print("fck")
-       return User(int(lu[0]))
-
-
-@app.route('/', methods=['GET'])                                        #betolteshezKell meg amugy index
+@app.route('/', methods=['GET']) #index
 def index():
     return send_from_directory('templates', 'index.html')
 
-@app.route('/login')                                                    #loginSite
+@app.route('/login') #loginSite
 def login():
     return send_from_directory('templates', 'index.html')
 
 
-@app.route('/onLogin', methods=['POST'])                         #loginPost
+@app.route('/onLogin', methods=['POST']) #loginPost
 def login_post():
 
-    username = request.form["username"]
-    password = request.form["password"]
-    conn = sqlite3.connect("app.db")
-    c = conn.cursor()
+    #ezek tuti kellenek
+    log_object = request.get_json()
+    username = log_object['username']
+    password = log_object['password']
 
+    user = User.query.filter_by(username=username).first()
 
+    #ide kell egy fgv ami megnezi a user valt segitsegevel hogy benne van-e + hash check
+
+    if not user:
+        return jsonify({'result': "nincs ilyen felhasználó"})
 
 
 
@@ -127,11 +118,11 @@ def login_post():
         return jsonify({'result': token})
 """
 
-@app.route('/register')     #registerSite
+@app.route('/register') #registerSite
 def register():
     return send_from_directory('templates', 'index.html')
 
-@app.route('/onRegister', methods=['GET','POST'])       #registerPost
+@app.route('/onRegister', methods=['GET','POST']) #registerPost
 def new_user():
     # username = request.get_json('username')
     reg_object = request.get_json()
@@ -150,16 +141,13 @@ def new_user():
         db.session.commit()
     return jsonify({'result': "sikeres reg"})
 
-
-"""landing sitehoz kell majd egy logout gomb is, meg talan hogy hi %aki benne van%"""
-@app.route('/landing')                                                  #landingSite    -   @login.required?
+@app.route('/landing') #landingSite
 def landing():
+    # landing sitehoz kell majd egy logout gomb is, meg talan hogy hi %aki benne van%
     return send_from_directory('templates', 'index.html')
 
-
-@app.route('/onUpload', methods=['POST'])                                                  #upload
+@app.route('/onUpload', methods=['POST']) #upload
 def upload():
-
 
     file = request.files['thumbnail']
     #text = request.form['name']
@@ -171,29 +159,17 @@ def upload():
     newFile = Images(name=file.filename, fp=os.path.abspath(UPLOAD_FOLDER))
     db.session.add(newFile)
     db.session.commit()
-
-    return jsonify({'result': "kepfeltoltes"})
-
-
-
-
-
-
+    #return jsonify({'result': "kepfeltoltes"})
 
 
 #@app.route('/logout')                                                  #token off
 #def logout():
-    #return redirect(url_for('/'))
     #return send_from_directory('templates', 'index.html')
-
-    """
-    a db-bol a userhez tartozo tokent azt nullazom
-    eloszor is megnezem hogy a logoutnal megkapom-e a tokent 
-    ha a token egyezik (benne van a db-be) akkor nullazom
-    """
+    #a db-bol a userhez tartozo tokent azt nullazom eloszor is megnezem hogy a logoutnal megkapom-e a tokent ha a token egyezik (benne van a db-be) akkor nullazom
 
 
-@app.route('/<path:filename>', methods=['GET'])                         #fajlok betolteseere szolgal
+
+@app.route('/<path:filename>', methods=['GET']) #fajlok betolteseere szolgal
 def send_path(filename):
     return send_from_directory('templates', filename)
 
