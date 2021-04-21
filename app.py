@@ -39,7 +39,7 @@ class User(UserMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(32), index=True)
     password = db.Column(db.String(128))
-    #pictures = db.relationship('Images', backref='owner', lazy=True) #lehet lazy nem is kell
+    pictures = db.relationship('Images', backref='owner', lazy=True) #lehet lazy nem is kell
 
     #one to many relationship egy usernek lehet több képe
 
@@ -55,6 +55,9 @@ class Images(db.Model):
     #data = db.Column(db.LargeBinary)
     fp = db.Column(db.String(264), unique=True)
     #vmi = db.Column(db.valamiTipus, db.ForeignKey('user.id vagy token'), nullable=False) #lehet nullable nem is kell
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # lehet nullable nem is kell
+
+    #ugy kell lekerni a kepeket hogy user szerint? marmint ha logged és ha van a usernek képe lekerjük
 
 #db.create_all()
 #db.session.commit()
