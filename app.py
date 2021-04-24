@@ -47,7 +47,7 @@ class User(UserMixin,db.Model):
         return '<User %r>' % self.username
 
     def verify_password(self, password):
-        return check_password_hash(password, self.password)
+        return check_password_hash(self.password, password)
 
 class Images(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -78,24 +78,16 @@ def login_post():
     username = log_object['username']
     password = log_object['password']
 
-    #form = LoginForm()
-    #username = form.username.data
-    #password = form.password.data
-    #if form.validate_on_submit():
-
     user = User.query.filter_by(username=username).first()
 
-    #if user and user.verify_password(password):
-    if user :
+    if user and user.verify_password(password):
+    #if user :
         # ha a password megegyezik a db user passwordjával (ami hashes) akkor sikeres login
         print("van ilyen felhasználó")
-        #login_user(user)
-
-        # valami miatt hibát dob
+        return jsonify({'result': "van ilyen felh"})
     else:
         print("nincs ilyen felhasználó vagy nem jól írtál be valamit")
         return redirect(url_for('login')) #ez miatt nem megy át
-       #return jsonify({'result': "nincs ilyen felhasználó"})
 
 
 
