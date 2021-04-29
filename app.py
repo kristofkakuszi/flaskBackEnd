@@ -31,6 +31,7 @@ app.secret_key = 'hello'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+
 def verifyToken(token):
     info = tokens[token]
     if info:
@@ -42,11 +43,12 @@ def verifyToken(token):
     else:
         return False
 
+
 class User(UserMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(32), index=True)
     password = db.Column(db.String(128))
-    #pictures = db.relationship('Images', backref='owner', lazy=True) #lehet lazy nem is kell
+    pictures = db.relationship('Images', backref='owner', lazy=True) #lehet lazy nem is kell
     #one to many relationship egy usernek lehet több képe
 
     def __repr__(self):
@@ -62,21 +64,30 @@ class Images(db.Model):
     #data = db.Column(db.LargeBinary)
     fp = db.Column(db.String(264), unique=True)
     #vmi = db.Column(db.valamiTipus, db.ForeignKey('user.id vagy token'), nullable=False) #lehet nullable nem is kell
-    #owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # lehet nullable nem is kell
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # lehet nullable nem is kell
 
     #ugy kell lekerni a kepeket hogy user szerint? marmint ha logged és ha van a usernek képe lekerjük
-
-
 
 
 @app.route('/', methods=['GET'])
 def index():
     return send_from_directory('templates', 'index.html')
 
-
 @app.route('/login')
 def login():
     return send_from_directory('templates', 'index.html')
+
+@app.route('/register')
+def register():
+    return send_from_directory('templates', 'index.html')
+
+@app.route('/landing')
+def landing(): #talan hogy hi %aki benne van%
+    return send_from_directory('templates', 'index.html')
+
+@app.route('/<path:filename>', methods=['GET'])
+def send_path(filename):#fajlok betolteseere szolgal
+    return send_from_directory('templates', filename)
 
 
 @app.route('/onLogin', methods=['POST'])
@@ -91,7 +102,6 @@ def login_post():
     if user and user.verify_password(password):
         print("van ilyen felhasználó")
         token = uuid.uuid4()
-        print (token)
         tokens[token] = {
             'user' : user,  #ide jön a user
             'expire' :  time.time() + expire_time #ide pedig hogy mennyi ideje van hátra
@@ -103,16 +113,6 @@ def login_post():
     else:
         print("nincs ilyen felh")
         return {"message": "Invalid username or password"}, 401 # nincs jogosultsága nem azonosította magát
-        #print("nincs ilyen felhasználó vagy nem jól írtál be valamit")
-        #return redirect(url_for('login')) #ez miatt nem megy át
-
-
-
-
-
-@app.route('/register')
-def register():
-    return send_from_directory('templates', 'index.html')
 
 
 @app.route('/onRegister', methods=['GET','POST'])
@@ -127,42 +127,34 @@ def new_user():
     user = User.query.filter_by(username=username).first()
     if user:
         print("letezik ilyen")
-        #return redirect(url_for('register')) # nem mukodik viszont ez miatt nem megy at loginra
-        return {"message": "letezik ilyen"}, 401
+        return {"message": "Invalid username or password"}, 401
     else:
         db.session.add(signup)
         db.session.commit()
-    return jsonify({'result': "sikeres reg"})
-
-
-@app.route('/landing')
-def landing(): #talan hogy hi %aki benne van%
-    return send_from_directory('templates', 'index.html')
+        return {"message": "sikeres reg"}, 200
 
 
 @app.route('/onUpload', methods=['POST'])
 def upload():
 
-    #token = request.headers.get('auth-token')
-    #if verifyToken(token):
+    token = request.headers.get('auth-token')
+    if verifyToken(token):
 
-        #info = tokens[token]
-        #user = info['user'] #ezzel tudom ki tolti fel a képet
+        info = tokens[token]
+        user = info['user'] #ezzel tudom ki tolti fel a képet
 
         file = request.files['thumbnail']
         #text = request.form['name']
 
-        # ezzel azt cisnalja h elmentei azzal a nevvel csak kiterjesztes nelkul de ha a vegere odairok .jpg-t akkor okes
-        #filename = text + ".jpg"
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
 
-        newFile = Images(name=file.filename, fp=os.path.abspath(UPLOAD_FOLDER)) #),owner_id=user.id)
+        newFile = Images(name=file.filename, fp=os.path.abspath(UPLOAD_FOLDER),owner_id=user.id) #),owner_id=user.id)
         db.session.add(newFile)
         db.session.commit()
         #return jsonify({'result': "kepfeltoltes"})
         return {"message": "done"}, 200 # lement a kérés
-    #else:
-        #return {"message": "done"}, 401
+    else:
+        return {"message": "done"}, 401
 
 
 #@app.route('/logout')                                                  #token off
@@ -171,9 +163,7 @@ def upload():
     #a db-bol a userhez tartozo tokent azt nullazom eloszor is megnezem hogy a logoutnal megkapom-e a tokent ha a token egyezik (benne van a db-be) akkor nullazom
 
 
-@app.route('/<path:filename>', methods=['GET']) #fajlok betolteseere szolgal
-def send_path(filename):
-    return send_from_directory('templates', filename)
+
 
 
 if __name__ == '__main__':

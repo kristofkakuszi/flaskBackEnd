@@ -65,6 +65,10 @@ class RegisterComponent {
         this.httpService.post("/onRegister", this.registerForm.value).subscribe((status) => {
             console.warn(status);
             this.router.navigate(['login']);
+            alert('Sikeres Regisztárció!\n\n');
+        }, (error) => {
+            alert("mar letezo felhasznalo");
+            //alert(error.message);
         });
         //alert('Sikeres Regisztárció!\n\n')
         console.warn(this.registerForm.value);
@@ -638,12 +642,14 @@ class LoginComponent {
             return;
         }
         this.httpService.post("/onLogin", this.loginForm.value).subscribe((status) => {
-            if (status.status == 200) {
-                this.heroService.token = status.body.token;
+            if (status['result']) {
+                this.heroService.token = status['token'];
                 this.router.navigate(['landing']);
+                alert('Sikeres Bejelentkezés!\n\n');
             }
         }, (error) => {
-            alert(error.message);
+            alert("nem jo nev vagy jelszo");
+            //alert(error.message);
         }
         /*
         (status) => {
