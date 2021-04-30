@@ -65,7 +65,6 @@ class Images(db.Model):
     fp = db.Column(db.String(264), unique=True)
     #vmi = db.Column(db.valamiTipus, db.ForeignKey('user.id vagy token'), nullable=False) #lehet nullable nem is kell
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # lehet nullable nem is kell
-
     #ugy kell lekerni a kepeket hogy user szerint? marmint ha logged és ha van a usernek képe lekerjük
 
 
@@ -83,7 +82,14 @@ def register():
 
 @app.route('/landing')
 def landing(): #talan hogy hi %aki benne van%
-    return send_from_directory('templates', 'index.html')
+
+    if not bool(tokens):
+        print("nem johetsz ide mert nem jelentkeztél be")
+        return {"message": "illetektelen hozzaferes"}, 401
+    else:
+        print("van token johetsz")
+        return send_from_directory('templates', 'index.html')
+
 
 @app.route('/<path:filename>', methods=['GET'])
 def send_path(filename):#fajlok betolteseere szolgal
@@ -104,8 +110,10 @@ def login_post():
         token = uuid.uuid4()
         tokens[token] = {
             'user' : user,  #ide jön a user
-            'expire' :  time.time() + expire_time #ide pedig hogy mennyi ideje van hátra
+            'expire' :  time.time() + expire_time, #ide pedig hogy mennyi ideje van hátra
+            'token' : token
         }
+        print(tokens[token])
         return jsonify({
             'result': True,
             'token': token
@@ -155,14 +163,6 @@ def upload():
         return {"message": "done"}, 200 # lement a kérés
     else:
         return {"message": "done"}, 401
-
-
-#@app.route('/logout')                                                  #token off
-#def logout():
-    #return send_from_directory('templates', 'index.html')
-    #a db-bol a userhez tartozo tokent azt nullazom eloszor is megnezem hogy a logoutnal megkapom-e a tokent ha a token egyezik (benne van a db-be) akkor nullazom
-
-
 
 
 
