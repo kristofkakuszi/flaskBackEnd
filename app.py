@@ -22,7 +22,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 expire_time = 1 * 24 * 60 * 60 #d*h*m*s
 tokens = {} #token dictionary
 
-                                                                                                                                            #mindig legyen visszateresi ertek!
+
 app.config['SECRET_KEY'] = 'plsWork'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -48,7 +48,7 @@ class User(UserMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(32), index=True)
     password = db.Column(db.String(128))
-    pictures = db.relationship('Images', backref='owner', lazy=True) #lehet lazy nem is kell
+    pictures = db.relationship('Images', backref='owner', lazy=True)
     #one to many relationship egy usernek lehet több képe
 
     def __repr__(self):
@@ -62,8 +62,7 @@ class Images(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(300))
     #data = db.Column(db.LargeBinary)
-    fp = db.Column(db.String(264), unique=True)
-    #vmi = db.Column(db.valamiTipus, db.ForeignKey('user.id vagy token'), nullable=False) #lehet nullable nem is kell
+    fp = db.Column(db.String(264))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # lehet nullable nem is kell
     #ugy kell lekerni a kepeket hogy user szerint? marmint ha logged és ha van a usernek képe lekerjük
 
@@ -82,14 +81,15 @@ def register():
 
 @app.route('/landing')
 def landing(): #talan hogy hi %aki benne van%
+    #ugye frontendem torlom viszont backenden nem es ezert engedi
+    token = request.headers.get('auth-token')
 
     if not bool(tokens):
-        print("nem johetsz ide mert nem jelentkeztél be")
+        print("nincs token")
         return {"message": "illetektelen hozzaferes"}, 401
     else:
-        print("van token johetsz")
+        print("van token")
         return send_from_directory('templates', 'index.html')
-
 
 @app.route('/<path:filename>', methods=['GET'])
 def send_path(filename):#fajlok betolteseere szolgal
@@ -106,14 +106,21 @@ def login_post():
     user = User.query.filter_by(username=username).first()
 
     if user and user.verify_password(password):
-        print("van ilyen felhasználó")
+        #print("van ilyen felhasználó")
         token = uuid.uuid4()
         tokens[token] = {
+        #tokens = {
             'user' : user,  #ide jön a user
             'expire' :  time.time() + expire_time, #ide pedig hogy mennyi ideje van hátra
-            'token' : token
+            'token' : token # maga a token
         }
-        print(tokens[token])
+        print(tokens[token]) #ez csak a tömböt írja ki
+
+        print(tokens)   #ez meg a dictionaryt
+
+        currentUser = token.get('user')
+        print(currentUser)
+
         return jsonify({
             'result': True,
             'token': token
@@ -146,25 +153,42 @@ def new_user():
 def upload():
 
     token = request.headers.get('auth-token')
-    if verifyToken(token):
+    print(token)
+    #if verifyToken(token):
 
-        info = tokens[token]
-        user = info['user'] #ezzel tudom ki tolti fel a képet
+    #info = tokens[token]
+    #print(info)
+    #user = info['user'] #ezzel tudom ki tolti fel a képet
+    #print(user)
 
-        file = request.files['thumbnail']
-        #text = request.form['name']
+    currentUser = tokens.get('user')
+    print(currentUser)
+    #azért none mert itt nem látja azt hogy a tokenbe már van
+    #de headerbol el kerhetnem nem?
 
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+    file = request.files['thumbnail']
+    #text = request.form['name']
 
-        newFile = Images(name=file.filename, fp=os.path.abspath(UPLOAD_FOLDER),owner_id=user.id) #),owner_id=user.id)
-        db.session.add(newFile)
-        db.session.commit()
-        #return jsonify({'result': "kepfeltoltes"})
-        return {"message": "done"}, 200 # lement a kérés
-    else:
-        return {"message": "done"}, 401
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+
+    newFile = Images(name=file.filename, fp=os.path.abspath(UPLOAD_FOLDER)) #),owner_id=user.id)
+    #newFile = Images(name=text) #),owner_id=user.id)
+    db.session.add(newFile)
+    db.session.commit()
+    #return jsonify({'result': "kepfeltoltes"})
+    return {"message": "done"}, 200 # lement a kérés
+    #else:
+    #return {"message": "done"}, 401
 
 
+@app.route('/onLogout', methods=['POST'])
+def logout():
+    token = request.headers.get('auth-token')
+    tokens.pop(token)
 
 if __name__ == '__main__':
     app.run()
+
+#python ./carPlateRecognition/licensePlate.py --input ./uploads
+#python ./faceDetection/face_detection.py --image ./uploads/face.jpg
+#python textRecognition/textDetection.py --image ./uploads/yuta.jpg --east textRecognition/frozen_east_text_detection.pb
