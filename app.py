@@ -93,7 +93,7 @@ def login_post():
     user = User.query.filter_by(username=username).first()
 
     if user and user.verify_password(password):
-        token = uuid.uuid4()
+        token = uuid.uuid4().hex
         tokens[token] = {
             'user' : user,  #ide jön a user
             'expire' :  time.time() + expire_time, #ide pedig hogy mennyi ideje van hátra
@@ -102,6 +102,7 @@ def login_post():
         print(tokens[token])
         info = tokens[token]
         user = info['user']
+        print(type(token))
         print(user) # ezt írja ki : <User 'hello'> nem csak a hellot kellene?
 
         return jsonify({

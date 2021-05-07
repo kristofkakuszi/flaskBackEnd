@@ -4,7 +4,7 @@ landing -> kiirja hiba viszont ha
 login -> token -> login -> offolja tokent de ha ujra landing bejelentkezes nelkul akkor beengedi
 (sztem magyarul nem kapja meg a token)
 
-user kerese -> hiba
+user kerese -> hiba (.hex-ként string lesz a típusa de hibat dob)
 
 modulok behuzasa fgv-ek hiányában is működik
 
