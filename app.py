@@ -160,10 +160,10 @@ def upload():
         return {"message": "hiba"}, 401
 
 
-@app.route('/uploads/<filename>') # fájl visszaadása, ide a fájlba kell majd egy dictionaryt adni? egy másik fgv segítségével
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'],
-                               filename)
+@app.route("/getImage/<path:image_name>",methods = ['GET','POST']) # fájl visszaadása, ide a fájlba kell majd egy dictionaryt adni? egy másik fgv segítségével
+def get_image(image_name):
+
+        return send_from_directory(app.config["UPLOAD_FOLDER"], filename=image_name, as_attachment=True)
 
 
 @app.route('/onLogout', methods=['POST'])
