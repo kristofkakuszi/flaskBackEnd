@@ -162,8 +162,8 @@ def upload():
 
 @app.route("/getImage/<path:image_name>",methods = ['GET','POST']) # fájl visszaadása, ide a fájlba kell majd egy dictionaryt adni? egy másik fgv segítségével
 def get_image(image_name):
-
         return send_from_directory(app.config["UPLOAD_FOLDER"], filename=image_name, as_attachment=True)
+#http://127.0.0.1:5000/getImage/face.jpg -el visszaadja a képet
 
 
 @app.route('/onLogout', methods=['POST'])
