@@ -114,7 +114,7 @@ def login_post():
         return {"message": "Invalid username or password"}, 401 # nincs jogosultsága nem azonosította magát
 
 
-@app.route('/onRegister', methods=['GET','POST'])
+@app.route('/onRegister', methods=['POST'])
 def new_user():
 
     reg_object = request.get_json()
@@ -158,6 +158,12 @@ def upload():
         return {"message": "done"}, 200 # lement a kérés
     else:
         return {"message": "hiba"}, 401
+
+
+@app.route('/uploads/<filename>') # fájl visszaadása, ide a fájlba kell majd egy dictionaryt adni? egy másik fgv segítségével
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'],
+                               filename)
 
 
 @app.route('/onLogout', methods=['POST'])
