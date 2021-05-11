@@ -118,8 +118,8 @@ def findText(image, min_confidence=0.5, width=320, height=320):
         length = length + 1
 
     if (length > 0) :
-        print("talált")
+        print("talált szöveget")
         return True
     else:
-        print("nem talált")
+        print("nem talált szöveget")
         return False

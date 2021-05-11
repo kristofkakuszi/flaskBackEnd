@@ -269,9 +269,8 @@ class LandingComponent {
         }
     }
     onLogout() {
-        console.warn(this.heroService.token);
         this.heroService.token = "";
-        console.warn(this.heroService.token);
+        console.warn("angular feluleten a token" + this.heroService.token);
         this.router.navigate(['./home']);
     }
 }

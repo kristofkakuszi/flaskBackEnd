@@ -8,6 +8,8 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from textRecognition.textDemo import findText
+from faceDetection.faceDemo import findFace
+from carPlateRecognition.plateDemo import findPlate
 
 UPLOAD_FOLDER = 'uploads' #ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
@@ -150,7 +152,10 @@ def upload():
         image_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename) #kulon valtozoba rakom az eleresi utvonalat
         file.save(image_path)
 
+
+        print(findFace(image_path))
         print(findText(image_path))
+        print(findPlate(image_path))
 
         newFile = Images(name=file.filename, fp=os.path.abspath(UPLOAD_FOLDER),owner_id=user.id) #),owner_id=user.id)
         db.session.add(newFile)
@@ -166,11 +171,11 @@ def get_image(image_name):
         return send_from_directory(app.config["UPLOAD_FOLDER"], filename=image_name, as_attachment=True)
 
 
-
 @app.route('/onLogout', methods=['POST'])
 def logout():
     token = request.headers.get('auth-token')
     tokens.pop(token)
+    print("flask oldalon login utan a token" + token)
 
 if __name__ == '__main__':
     app.run()
