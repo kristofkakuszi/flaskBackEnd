@@ -7,14 +7,15 @@ from flask_login import UserMixin
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from textRecognition.textDemo import findText
 
 UPLOAD_FOLDER = 'uploads' #ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-expire_time = 1 * 24 * 60 * 60 #d*h*m*s
-tokens = {} #token dictionary
+expire_time = 1 * 24 * 60 * 60
+tokens = {}
 
 
 app.config['SECRET_KEY'] = 'plsWork'
@@ -29,8 +30,7 @@ migrate = Migrate(app, db)
 def verifyToken(token):
     info = tokens[token]
     if info:
-        if info['expire'] > time.time() + expire_time:
-            # belepunk onnantol elkezdodik 1nap visszaszamlalva ha ez letelik tokent torol
+        if info['expire'] > time.time():
             return True
         else:
             tokens.pop(token) #ha lejárt kitörlöm a dictionarybol
@@ -93,17 +93,17 @@ def login_post():
     user = User.query.filter_by(username=username).first()
 
     if user and user.verify_password(password):
-        token = uuid.uuid4().hex
+        token = str(uuid.uuid4())
         tokens[token] = {
-            'user' : user,  #ide jön a user
-            'expire' :  time.time() + expire_time, #ide pedig hogy mennyi ideje van hátra
-            'token' : token # maga a token
+            'user' : user,
+            'expire' :  time.time() + expire_time,
+            'token' : token
         }
         print(tokens[token])
         info = tokens[token]
         user = info['user']
         print(type(token))
-        print(user) # ezt írja ki : <User 'hello'> nem csak a hellot kellene?
+        print(user)
 
         return jsonify({
             'result': True,
@@ -146,12 +146,13 @@ def upload():
         print(user)
 
         file = request.files['thumbnail']
-        #text = request.form['name']
 
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename) #kulon valtozoba rakom az eleresi utvonalat
+        file.save(image_path)
+
+        print(findText(image_path))
 
         newFile = Images(name=file.filename, fp=os.path.abspath(UPLOAD_FOLDER),owner_id=user.id) #),owner_id=user.id)
-        #newFile = Images(name=text) #),owner_id=user.id)
         db.session.add(newFile)
         db.session.commit()
         #return jsonify({'result': "kepfeltoltes"})
@@ -163,7 +164,7 @@ def upload():
 @app.route("/getImage/<path:image_name>",methods = ['GET','POST']) # fájl visszaadása, ide a fájlba kell majd egy dictionaryt adni? egy másik fgv segítségével
 def get_image(image_name):
         return send_from_directory(app.config["UPLOAD_FOLDER"], filename=image_name, as_attachment=True)
-#http://127.0.0.1:5000/getImage/face.jpg -el visszaadja a képet
+
 
 
 @app.route('/onLogout', methods=['POST'])
