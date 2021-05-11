@@ -259,7 +259,7 @@ class LandingComponent {
             formData.append("thumbnail", file);
             const upload$ = this.httpService.post("/onUpload", formData);
             upload$.subscribe((info) => {
-                alert("Done");
+                alert("Sikeres kepfeltoltes");
             }, (error) => {
                 if (error.status == 401) {
                     this.heroService.token = "";
@@ -272,6 +272,7 @@ class LandingComponent {
         this.heroService.token = "";
         console.warn("angular feluleten a token" + this.heroService.token);
         this.router.navigate(['./home']);
+        alert("Sikeres kijelentkezés");
     }
 }
 LandingComponent.ɵfac = function LandingComponent_Factory(t) { return new (t || LandingComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdirectiveInject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClient"]), _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdirectiveInject"](_hero_service__WEBPACK_IMPORTED_MODULE_3__["HeroService"]), _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_4__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdirectiveInject"](_angular_forms__WEBPACK_IMPORTED_MODULE_0__["FormBuilder"])); };

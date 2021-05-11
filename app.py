@@ -149,21 +149,24 @@ def upload():
 
         file = request.files['thumbnail']
 
-        image_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename) #kulon valtozoba rakom az eleresi utvonalat
+        user_dir = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id))
+        os.makedirs(user_dir, exist_ok=True)
+
+        image_path = os.path.join(user_dir, str(uuid.uuid4()) + "." + str(file.filename).split(".")[-1]) #kulon valtozoba rakom az eleresi utvonalat
         file.save(image_path)
 
 
-        print(findFace(image_path))
-        print(findText(image_path))
-        print(findPlate(image_path))
+        findFace(image_path)
+        #print(findText(image_path))
+        findPlate(image_path)
 
-        newFile = Images(name=file.filename, fp=os.path.abspath(UPLOAD_FOLDER),owner_id=user.id) #),owner_id=user.id)
+        newFile = Images(name=file.filename, fp=os.path.abspath(image_path),owner_id=user.id) #),owner_id=user.id)
         db.session.add(newFile)
         db.session.commit()
         #return jsonify({'result': "kepfeltoltes"})
-        return {"message": "done"}, 200 # lement a kérés
+        return {"message": "Sikeres kepfeltoltes"}, 200 # lement a kérés
     else:
-        return {"message": "hiba"}, 401
+        return {"message": "Sikertelen kepfeltoltes"}, 401
 
 
 @app.route("/getImage/<path:image_name>",methods = ['GET','POST']) # fájl visszaadása, ide a fájlba kell majd egy dictionaryt adni? egy másik fgv segítségével
