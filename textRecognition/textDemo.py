@@ -12,8 +12,8 @@ import os
 
 def findText(image, min_confidence=0.5, width=320, height=320):
 
-    east = os.path.join(os.path.dirname(__file__),"frozen_east_text_detection.pb")
-    print(east)
+    east = os.path.join("frozen_east_text_detection.pb")
+    #print(east)
 
     img = cv2.imread(image)
     orig = img.copy()
@@ -86,8 +86,8 @@ def findText(image, min_confidence=0.5, width=320, height=320):
         length = length + 1
 
     if (length > 0) :
-        print("talált szöveget")
+        print("van szoveg")
         return True
     else:
-        print("nem talált szöveget")
+        print("nincs szoveg")
         return False

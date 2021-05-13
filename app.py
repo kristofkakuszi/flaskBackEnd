@@ -19,7 +19,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 expire_time = 1 * 24 * 60 * 60
 tokens = {}
 
-
 app.config['SECRET_KEY'] = 'plsWork'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -99,11 +98,15 @@ def login_post():
             'expire' :  time.time() + expire_time,
             'token' : token
         }
-        print(tokens[token])
-        info = tokens[token]
-        user = info['user']
-        print(type(token))
-        print(user)
+        #print(tokens[token])
+        #info = tokens[token]
+        #user = info['user']
+        #print(type(token))
+        #print(user)
+        print("user id-ja: " + str(user.id))
+
+        userImages = Images.query.filter_by(owner_id=user.id).all()
+        print(userImages)
 
         return jsonify({
             'result': True,
@@ -137,13 +140,13 @@ def new_user():
 def upload():
 
     token = request.headers.get('auth-token')
-    print(token)
+    #print(token)
     if verifyToken(token):
 
         info = tokens[token]
-        print(info)
+        #print(info)
         user = info['user'] #ezzel tudom ki tolti fel a képet
-        print(user)
+        print("felhasznalo neve: " + str(user))
 
         file = request.files['thumbnail']
 
@@ -151,10 +154,10 @@ def upload():
         os.makedirs(user_dir, exist_ok=True)
 
         image_path = os.path.join(user_dir, str(uuid.uuid4()) + "." + str(file.filename).split(".")[-1]) #kulon valtozoba rakom az eleresi utvonalat
-        print(image_path)
+        print("kep eleresi utvonala: " + str(image_path))
         file.save(image_path)
 
-        #print(findText(image_path))
+        print(findText(image_path))
         print(findFace(image_path))
         print(findPlate(image_path))
 
@@ -170,27 +173,27 @@ def upload():
 @app.route("/getImages/<path:image_name>",methods = ['POST'])
 def get_image(image_name):
 
+    #userImages = {}
+
     token = request.headers.get('auth-token')
     if verifyToken(token):
         info = tokens[token]
         print(info)
-        user = info['user']
-        user_id = user.id
+        user = info['user'] #kiolvasom a usert
+        #print(user.id)  #user id
+        #userImages = Images.query.all(owner_id = user.id)
+
+        userImages = Images.query.filter_by(owner_id = user.id).all() # a userhez tartozo osszes kep viszont ezeknek az eleresi utvonala kell majd es ezt viszem tovabb
+
+        # ez a userImages egy lista lesz, előtte kell deklaráljam nem?
+        #azt honnan tudom hogy melyik kép arc szöveg rendsz? ezekre lefuttatom ujra a foggvenyeket? -> vagy ha true akkor
+        # ugye a dictet bejarjuk uin
+        #amikot talal arcokat akkor gyartok az uin linkeket html image tageket aminek megadom az urlt
+        #path:image helyere egy image idt irok be es lekerem egy Images.query.filter_by(id=id) de milyen id 51:10
+
     else:
-        return send_from_directory(app.config["UPLOAD_FOLDER"], filename=image_name, as_attachment=True)
-
-"""
-
-majd az imagesbol querivel images.query.filter by oswner id az a user id legyen ahhoz a userhez tartozo osszes képet lekérem ez egy lista lesz
-
-ezt a listat visszakuldom az ui-ra(ahhoz hogy ezt visszaadjam a heroban is kell definiáljam nem?)
-a listaban lesznek a kepek adatai
-ezt a tombot be kell majd jarni az uin
-a uin html image tageket kell kirakni aminek megadom az urlt
-nem path image hanem egy image idt irok be  es lekerem ilyen images.query filter id = id az alapjan lekerem az imaget es az imagebol kiolvasom annak a pathjat es visszaadomuin
-
-
-"""
+        return {"message": "Sikertelen"}, 401
+        #return send_from_directory(app.config["UPLOAD_FOLDER"], filename=image_name, as_attachment=True)
 
 
 @app.route('/onLogout', methods=['POST'])
