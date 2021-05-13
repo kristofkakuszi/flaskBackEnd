@@ -1,5 +1,6 @@
 #futtatás
 #python ./faceDetection/face_detection.py --image ./uploads/face.jpg
+#uploads\1\7491ab50-ea3d-49ed-8127-0098ec7eeabd.jpg
 #ennek kép az inputa
 import os
 
@@ -20,15 +21,8 @@ def findFace(image, upsample=1):
 	img = imutils.resize(img, width=600)
 	rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-	# perform face detection using dlib's face detector
-	start = time.time()
 	rects = detector(rgb, upsample)
-	end = time.time()
 
-
-	# convert the resulting dlib rectangle objects to bounding boxes,
-	# then ensure the bounding boxes are all within the bounds of the
-	# input image
 	boxes = [convert_and_trim_bb(img, r) for r in rects]
 	length = 0
 	# loop over the bounding boxes
@@ -36,7 +30,6 @@ def findFace(image, upsample=1):
 		# draw the bounding box on our image
 		cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 	length = length + 1
-
 	if (length > 0) :
 		print("talált arcot")
 		return True

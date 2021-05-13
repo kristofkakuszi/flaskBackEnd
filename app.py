@@ -54,14 +54,12 @@ class User(UserMixin,db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password, password)
 
-
 class Images(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(300))
     #data = db.Column(db.LargeBinary)
     fp = db.Column(db.String(264))
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # lehet nullable nem is kell
-    #ugy kell lekerni a kepeket hogy user szerint? marmint ha logged és ha van a usernek képe lekerjük
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
 @app.route('/', methods=['GET'])
@@ -153,12 +151,12 @@ def upload():
         os.makedirs(user_dir, exist_ok=True)
 
         image_path = os.path.join(user_dir, str(uuid.uuid4()) + "." + str(file.filename).split(".")[-1]) #kulon valtozoba rakom az eleresi utvonalat
+        print(image_path)
         file.save(image_path)
 
-
-        findFace(image_path)
         #print(findText(image_path))
-        findPlate(image_path)
+        print(findFace(image_path))
+        print(findPlate(image_path))
 
         newFile = Images(name=file.filename, fp=os.path.abspath(image_path),owner_id=user.id) #),owner_id=user.id)
         db.session.add(newFile)
@@ -169,9 +167,30 @@ def upload():
         return {"message": "Sikertelen kepfeltoltes"}, 401
 
 
-@app.route("/getImage/<path:image_name>",methods = ['GET','POST']) # fájl visszaadása, ide a fájlba kell majd egy dictionaryt adni? egy másik fgv segítségével
+@app.route("/getImages/<path:image_name>",methods = ['POST'])
 def get_image(image_name):
+
+    token = request.headers.get('auth-token')
+    if verifyToken(token):
+        info = tokens[token]
+        print(info)
+        user = info['user']
+        user_id = user.id
+    else:
         return send_from_directory(app.config["UPLOAD_FOLDER"], filename=image_name, as_attachment=True)
+
+"""
+
+majd az imagesbol querivel images.query.filter by oswner id az a user id legyen ahhoz a userhez tartozo osszes képet lekérem ez egy lista lesz
+
+ezt a listat visszakuldom az ui-ra(ahhoz hogy ezt visszaadjam a heroban is kell definiáljam nem?)
+a listaban lesznek a kepek adatai
+ezt a tombot be kell majd jarni az uin
+a uin html image tageket kell kirakni aminek megadom az urlt
+nem path image hanem egy image idt irok be  es lekerem ilyen images.query filter id = id az alapjan lekerem az imaget es az imagebol kiolvasom annak a pathjat es visszaadomuin
+
+
+"""
 
 
 @app.route('/onLogout', methods=['POST'])
