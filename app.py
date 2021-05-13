@@ -200,7 +200,6 @@ def get_image(image_name):
 def logout():
     token = request.headers.get('auth-token')
     tokens.pop(token)
-    print("flask oldalon login utan a token" + token)
 
 if __name__ == '__main__':
     app.run()
