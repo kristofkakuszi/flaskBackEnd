@@ -257,6 +257,7 @@ class LandingComponent {
                     if (error.status == 401) {
                         this.heroService.token = "";
                         this.router.navigate(['landing']);
+                        alert("Sikertelen képfeltöltés");
                     }
                 });
             }

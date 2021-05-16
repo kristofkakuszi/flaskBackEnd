@@ -16,7 +16,7 @@ UPLOAD_FOLDER = 'uploads' #ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-expire_time = 1 * 24 * 60 * 60
+expire_time = 10 * 60
 tokens = {}
 
 app.config['SECRET_KEY'] = 'plsWork'
@@ -32,8 +32,11 @@ def verifyToken(token):
     info = tokens[token]
     if info:
         if info['expire'] > time.time():
+            print(info['expire'])
             return True
         else:
+            print("kiment a token")
+            print(type(expire_time))
             tokens.pop(token) #ha lejárt kitörlöm a dictionarybol
             return False
     else:
@@ -59,6 +62,10 @@ class Images(db.Model):
     #data = db.Column(db.LargeBinary)
     fp = db.Column(db.String(264))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    faceFound = db.Column(db.Boolean, default=False)
+    textFound = db.Column(db.Boolean, default=False)
+    plateFound = db.Column(db.Boolean, default=False)
+
 
 
 @app.route('/', methods=['GET'])
@@ -140,11 +147,16 @@ def new_user():
 def upload():
 
     token = request.headers.get('auth-token')
+
+    if not token:
+        print("nincs token szoval nincs feltotltes")
+        return {"message": "Sikertelen"}, 401
+
     #print(token)
     if verifyToken(token):
 
         info = tokens[token]
-        #print(info)
+        print(info)
         user = info['user'] #ezzel tudom ki tolti fel a képet
         print("felhasznalo neve: " + str(user))
 
@@ -157,17 +169,18 @@ def upload():
         print("kep eleresi utvonala: " + str(image_path))
         file.save(image_path)
 
-        print(findText(image_path))
-        print(findFace(image_path))
-        print(findPlate(image_path))
+        hasText = findText(image_path)
+        hasFace = findFace(image_path)
+        hasPlate = findPlate(image_path)
 
-        newFile = Images(name=file.filename, fp=os.path.abspath(image_path),owner_id=user.id) #),owner_id=user.id)
-        db.session.add(newFile)
-        db.session.commit()
-        #return jsonify({'result': "kepfeltoltes"})
-        return {"message": "Sikeres kepfeltoltes"}, 200 # lement a kérés
-    else:
-        return {"message": "Sikertelen kepfeltoltes"}, 401
+        if (hasText or hasFace or hasPlate):
+            newFile = Images(name=file.filename, fp=os.path.abspath(image_path), owner_id=user.id, faceFound=hasFace, textFound=hasText, plateFound=hasPlate)
+            db.session.add(newFile)
+            db.session.commit()
+            return {"message": "sikeres "}, 200
+        else:
+            return {"message": "sikertelen "}, 401
+
 
 
 @app.route("/getImages/<path:image_name>",methods = ['POST'])
