@@ -182,6 +182,7 @@ def upload():
             getFacesFromDB = Images.query.filter_by(owner_id=user.id, faceFound=True).all()
             getTextFromDB = Images.query.filter_by(owner_id=user.id, textFound=True).all()
             getPlateFromDB = Images.query.filter_by(owner_id=user.id, plateFound=True).all()
+            userImages = Images.query.filter_by(owner_id=user.id).all()
 
             #print(type(getFacesFromDB)) #lista lesz
             #print(getTextFromDB)
