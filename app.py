@@ -173,10 +173,19 @@ def upload():
         hasFace = findFace(image_path)
         hasPlate = findPlate(image_path)
 
+
         if (hasText or hasFace or hasPlate):
             newFile = Images(name=file.filename, fp=os.path.abspath(image_path), owner_id=user.id, faceFound=hasFace, textFound=hasText, plateFound=hasPlate)
             db.session.add(newFile)
             db.session.commit()
+
+            getFacesFromDB = Images.query.filter_by(owner_id=user.id, faceFound=True).all()
+            getTextFromDB = Images.query.filter_by(owner_id=user.id, textFound=True).all()
+            getPlateFromDB = Images.query.filter_by(owner_id=user.id, plateFound=True).all()
+
+            #print(type(getFacesFromDB)) #lista lesz
+            #print(getTextFromDB)
+            #print(getPlateFromDB)
             return {"message": "sikeres "}, 200
         else:
             return {"message": "sikertelen "}, 401
