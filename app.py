@@ -152,12 +152,11 @@ def upload():
         print("nincs token szoval nincs feltotltes")
         return {"message": "Sikertelen"}, 401
 
-    #print(token)
     if verifyToken(token):
 
         info = tokens[token]
         print(info)
-        user = info['user'] #ezzel tudom ki tolti fel a képet
+        user = info['user']
         print("felhasznalo neve: " + str(user))
 
         file = request.files['thumbnail']
@@ -165,10 +164,10 @@ def upload():
         user_dir = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id))
         os.makedirs(user_dir, exist_ok=True)
 
-        image_path = os.path.join(user_dir, str(uuid.uuid4()) + "." + str(file.filename).split(".")[-1]) #kulon valtozoba rakom az eleresi utvonalat
+        image_path = os.path.join(user_dir, str(uuid.uuid4()) + "." + str(file.filename).split(".")[-1])
         print("kep eleresi utvonala: " + str(image_path))
-        file.save(image_path)
 
+        file.save(image_path)
         hasText = findText(image_path)
         hasFace = findFace(image_path)
         hasPlate = findPlate(image_path)
@@ -179,14 +178,16 @@ def upload():
             db.session.add(newFile)
             db.session.commit()
 
-            getFacesFromDB = Images.query.filter_by(owner_id=user.id, faceFound=True).all()
-            getTextFromDB = Images.query.filter_by(owner_id=user.id, textFound=True).all()
-            getPlateFromDB = Images.query.filter_by(owner_id=user.id, plateFound=True).all()
-            userImages = Images.query.filter_by(owner_id=user.id).all()
+            getFacesFrom = Images.query.filter_by(owner_id=user.id, faceFound=True).all() #ezek listak lesznek
+            getTextFrom = Images.query.filter_by(owner_id=user.id, textFound=True).all()
+            getPlateFrom = Images.query.filter_by(owner_id=user.id, plateFound=True).all()
+            getNothingFrom = Images.query.filter_by(owner_id=user.id, faceFound=False, textFound=False, plateFound=False).all()
+            return {"message": "sikeres "}, 200
 
-            #print(type(getFacesFromDB)) #lista lesz
-            #print(getTextFromDB)
-            #print(getPlateFromDB)
+        elif (hasText is False and hasFace is False and hasPlate is False):
+            anotherFile = Images(name=file.filename, fp=os.path.abspath(image_path), owner_id=user.id, faceFound=False, textFound=False, plateFound=False)
+            db.session.add(anotherFile)
+            db.session.commit()
             return {"message": "sikeres "}, 200
         else:
             return {"message": "sikertelen "}, 401
@@ -196,28 +197,17 @@ def upload():
 @app.route("/getImages/<path:image_name>",methods = ['POST'])
 def get_image(image_name):
 
-    #userImages = {}
-
     token = request.headers.get('auth-token')
     if verifyToken(token):
         info = tokens[token]
         print(info)
-        user = info['user'] #kiolvasom a usert
-        #print(user.id)  #user id
-        #userImages = Images.query.all(owner_id = user.id)
-
-        userImages = Images.query.filter_by(owner_id = user.id).all() # a userhez tartozo osszes kep viszont ezeknek az eleresi utvonala kell majd es ezt viszem tovabb
-
-        # ez a userImages egy lista lesz, előtte kell deklaráljam nem?
-        #azt honnan tudom hogy melyik kép arc szöveg rendsz? ezekre lefuttatom ujra a foggvenyeket? -> vagy ha true akkor
+        user = info['user']
         # ugye a dictet bejarjuk uin
         #amikot talal arcokat akkor gyartok az uin linkeket html image tageket aminek megadom az urlt
         #path:image helyere egy image idt irok be es lekerem egy Images.query.filter_by(id=id) de milyen id 51:10
-
     else:
         return {"message": "Sikertelen"}, 401
         #return send_from_directory(app.config["UPLOAD_FOLDER"], filename=image_name, as_attachment=True)
-
 
 @app.route('/onLogout', methods=['POST'])
 def logout():

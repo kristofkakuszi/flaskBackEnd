@@ -24,17 +24,17 @@ def findFace(image, upsample=1):
 	rects = detector(rgb, upsample)
 
 	boxes = [convert_and_trim_bb(img, r) for r in rects]
-	length = 0
+
 	# loop over the bounding boxes
 	for (x, y, w, h) in boxes:
 		# draw the bounding box on our image
 		cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-	length = length + 1
-	if (length > 0) :
-		print("van arc")
-		return True
-	else:
+
+	if not boxes:
 		print("nincs arc")
 		return False
+	else:
+		print("van arc")
+		return True
 
 # show the output image

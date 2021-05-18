@@ -17,9 +17,8 @@ def findPlate(input, clear_border=1, psm=7, debug=-1):
 	(lpText, lpCnt) = anpr.find_and_ocr(image, psm=psm,
 		clearBorder=clear_border > 0)
 
-	lpCounter = 0
 	if lpText is not None and lpCnt is not None:
-		lpCounter = lpCounter + 1
+
 		box = cv2.boxPoints(cv2.minAreaRect(lpCnt))
 		box = box.astype("int")
 		cv2.drawContours(image, [box], -1, (0, 255, 0), 2)
