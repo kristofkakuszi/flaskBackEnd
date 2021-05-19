@@ -31,7 +31,7 @@ rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
 # perform face detection using dlib's face detector
 start = time.time()
-
+print("[INFO[ performing face detection with dlib...")
 rects = detector(rgb, args["upsample"])
 end = time.time()
 print("[INFO] face detection took {:.4f} seconds".format(end - start))
@@ -46,8 +46,6 @@ for (x, y, w, h) in boxes:
 	# draw the bounding box on our image
 	cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-
-if not boxes:
-	print("nicns arc")
-else:
-	print("van arc")
+# show the output image
+cv2.imshow("Output", image)
+cv2.waitKey(0)

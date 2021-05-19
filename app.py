@@ -11,7 +11,7 @@ from textRecognition.textDemo import findText
 from faceDetection.faceDemo import findFace
 from carPlateRecognition.plateDemo import findPlate
 
-UPLOAD_FOLDER = 'uploads' #ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+UPLOAD_FOLDER = 'uploads'
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -37,7 +37,7 @@ def verifyToken(token):
         else:
             print("kiment a token")
             print(type(expire_time))
-            tokens.pop(token) #ha lejárt kitörlöm a dictionarybol
+            tokens.pop(token)
             return False
     else:
         return False
@@ -48,7 +48,6 @@ class User(UserMixin,db.Model):
     username = db.Column(db.String(32), index=True)
     password = db.Column(db.String(128))
     pictures = db.relationship('Images', backref='owner', lazy=True)
-    #one to many relationship egy usernek lehet több képe
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -59,13 +58,11 @@ class User(UserMixin,db.Model):
 class Images(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(300))
-    #data = db.Column(db.LargeBinary)
     fp = db.Column(db.String(264))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     faceFound = db.Column(db.Boolean, default=False)
     textFound = db.Column(db.Boolean, default=False)
     plateFound = db.Column(db.Boolean, default=False)
-
 
 
 @app.route('/', methods=['GET'])
@@ -105,15 +102,7 @@ def login_post():
             'expire' :  time.time() + expire_time,
             'token' : token
         }
-        #print(tokens[token])
-        #info = tokens[token]
-        #user = info['user']
-        #print(type(token))
-        #print(user)
         print("user id-ja: " + str(user.id))
-
-        userImages = Images.query.filter_by(owner_id=user.id).all()
-        print(userImages)
 
         return jsonify({
             'result': True,
@@ -157,7 +146,7 @@ def upload():
         info = tokens[token]
         print(info)
         user = info['user']
-        print("felhasznalo neve: " + str(user))
+        print("bejelentkezett felhasznalo neve: " + str(user))
 
         file = request.files['thumbnail']
 
@@ -172,16 +161,23 @@ def upload():
         hasFace = findFace(image_path)
         hasPlate = findPlate(image_path)
 
+        getFacesFrom = Images.query.filter_by(owner_id=user.id, faceFound=True).all()  # ezek listak lesznek
+        getTextFrom = Images.query.filter_by(owner_id=user.id, textFound=True).all()
+        getPlateFrom = Images.query.filter_by(owner_id=user.id, plateFound=True).all()
+        getNothingFrom = Images.query.filter_by(owner_id=user.id, faceFound=False, textFound=False,
+                                                plateFound=False).all()
+
+        print(getFacesFrom)
+        print(getTextFrom)
+        print(getPlateFrom)
+        print(getNothingFrom)
+
+
 
         if (hasText or hasFace or hasPlate):
             newFile = Images(name=file.filename, fp=os.path.abspath(image_path), owner_id=user.id, faceFound=hasFace, textFound=hasText, plateFound=hasPlate)
             db.session.add(newFile)
             db.session.commit()
-
-            getFacesFrom = Images.query.filter_by(owner_id=user.id, faceFound=True).all() #ezek listak lesznek
-            getTextFrom = Images.query.filter_by(owner_id=user.id, textFound=True).all()
-            getPlateFrom = Images.query.filter_by(owner_id=user.id, plateFound=True).all()
-            getNothingFrom = Images.query.filter_by(owner_id=user.id, faceFound=False, textFound=False, plateFound=False).all()
             return {"message": "sikeres "}, 200
 
         elif (hasText is False and hasFace is False and hasPlate is False):

@@ -43,6 +43,8 @@ for imagePath in imagePaths:
 		# draw the bounding box on the license plate
 		box = cv2.boxPoints(cv2.minAreaRect(lpCnt))
 		box = box.astype("int")
+		print(type(box))
+		print(box)
 		cv2.drawContours(image, [box], -1, (0, 255, 0), 2)
 
 		# compute a normal (unrotated) bounding box for the license

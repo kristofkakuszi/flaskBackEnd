@@ -118,6 +118,8 @@ for y in range(0, numRows):
 # apply non-maxima suppression to suppress weak, overlapping bounding
 # boxes
 boxes = non_max_suppression(np.array(rects), probs=confidences)
+print(type(boxes))
+print(boxes)
 
 # loop over the bounding boxes
 for (startX, startY, endX, endY) in boxes:
