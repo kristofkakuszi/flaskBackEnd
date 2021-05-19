@@ -1,8 +1,8 @@
-from carPlateRecognition.license import PyImageSearchANPR
-from imutils import paths
-import argparse
-import imutils
 import cv2
+import imutils
+
+from carPlateRecognition.license import PyImageSearchANPR
+
 
 def cleanup_text(text):
 	return "".join([c if ord(c) < 128 else "" for c in text]).strip()

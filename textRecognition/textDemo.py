@@ -1,14 +1,9 @@
-#futtatás
-#python textRecognition/textDetection.py --image ./uploads/sign.jpg --east textRecognition/frozen_east_text_detection.pb
-
-#ennek kép az inputa
-
-from imutils.object_detection import non_max_suppression
-import numpy as np
-import argparse
-import time
-import cv2
 import os
+
+import cv2
+import numpy as np
+from imutils.object_detection import non_max_suppression
+
 
 def findText(image, min_confidence=0.5, width=320, height=320):
 

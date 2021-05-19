@@ -188,20 +188,50 @@ def upload():
             return {"message": "sikertelen "}, 401
 
 
-@app.route("/getImages/<path:image_name>",methods = ['POST'])
-def get_image(image_name):
+@app.route("/getImages",methods = ['GET'])
+def get_images():
 
     token = request.headers.get('auth-token')
     if verifyToken(token):
         info = tokens[token]
         print(info)
         user = info['user']
-        # ugye a dictet bejarjuk uin
-        #amikot talal arcokat akkor gyartok az uin linkeket html image tageket aminek megadom az urlt
-        #path:image helyere egy image idt irok be es lekerem egy Images.query.filter_by(id=id) de milyen id 51:10
+        images = Images.query.filter_by(owner_id=user.id).all()
+        images_alt = []
+        for image in images:
+            i = {}
+            i["id"] = image.id
+            i["name"] = image.name
+            i["fp"] = image.fp
+            i["owner_id"] = image.owner_id
+            i["faceFound"] = image.faceFound
+            i["textFound"] = image.textFound
+            i["plateFound"] = image.plateFound
+            images_alt.append(i)
+        return jsonify({
+            'result' : images_alt
+        }), 200
     else:
         return {"message": "Sikertelen"}, 401
-        #return send_from_directory(app.config["UPLOAD_FOLDER"], filename=image_name, as_attachment=True)
+
+
+@app.route('/getImage', methods=['GET'])
+def get_image():
+    id = request.args.get("id")
+    token = request.args.get("token")
+    if verifyToken(token):
+        info = tokens[token]
+        print(info)
+        user = info['user']
+        image = Images.query.filter_by(owner_id=user.id, id=id).first()
+        user_dir = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id))
+        file_name = image.fp.split("\\")[-1]
+        print(user_dir)
+        print(file_name)
+        return send_from_directory(user_dir, filename=file_name)
+    else:
+        return {"message" : "Sikertelen"}, 401
+
 
 @app.route('/onLogout', methods=['POST'])
 def logout():
