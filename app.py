@@ -1,8 +1,10 @@
+import io
 import os
 import time
 import uuid
+import zipfile
 
-from flask import Flask, send_from_directory, request, jsonify
+from flask import Flask, send_from_directory, request, jsonify, make_response
 from flask_login import UserMixin
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -164,15 +166,12 @@ def upload():
         getFacesFrom = Images.query.filter_by(owner_id=user.id, faceFound=True).all()  # ezek listak lesznek
         getTextFrom = Images.query.filter_by(owner_id=user.id, textFound=True).all()
         getPlateFrom = Images.query.filter_by(owner_id=user.id, plateFound=True).all()
-        getNothingFrom = Images.query.filter_by(owner_id=user.id, faceFound=False, textFound=False,
-                                                plateFound=False).all()
+        getNothingFrom = Images.query.filter_by(owner_id=user.id, faceFound=False, textFound=False, plateFound=False).all()
 
         print(getFacesFrom)
         print(getTextFrom)
         print(getPlateFrom)
         print(getNothingFrom)
-
-
 
         if (hasText or hasFace or hasPlate):
             newFile = Images(name=file.filename, fp=os.path.abspath(image_path), owner_id=user.id, faceFound=hasFace, textFound=hasText, plateFound=hasPlate)
@@ -187,7 +186,6 @@ def upload():
             return {"message": "sikeres "}, 200
         else:
             return {"message": "sikertelen "}, 401
-
 
 
 @app.route("/getImages/<path:image_name>",methods = ['POST'])
@@ -209,6 +207,27 @@ def get_image(image_name):
 def logout():
     token = request.headers.get('auth-token')
     tokens.pop(token)
+
+"""
+@app.route('/download', methods=['GET','POST'])
+def download():
+
+    #filePath =
+
+    fileobj = io.BytesIO()
+    with zipfile.ZipFile(fileobj, 'w') as zip_file:
+        zip_info = zipfile.ZipInfo(filePath)
+        zip_info.date_time = time.localtime(time.time())[:6]
+        zip_info.compress_type = zipfile.ZIP_DEFLATED
+        with open(filePath, 'rb') as fd:
+            zip_file.writestr(zip_info, fd.read())
+    fileobj.seek(0)
+
+    response = make_response(fileobj.read())
+    response.headers.set('Content-Type', 'zip')
+    response.headers.set('Content-Disposition', 'attachment', filename='%s.zip' % os.path.basename(filePath))
+    return response
+"""
 
 if __name__ == '__main__':
     app.run()
