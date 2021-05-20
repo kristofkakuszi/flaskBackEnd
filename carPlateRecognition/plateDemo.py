@@ -10,7 +10,6 @@ def cleanup_text(text):
 def findPlate(input, clear_border=1, psm=7, debug=-1):
 
 	anpr = PyImageSearchANPR(debug=debug > 0)
-
 	image = cv2.imread(input)
 	image = imutils.resize(image, width=600)
 

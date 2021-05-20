@@ -9,6 +9,8 @@ from flask_login import UserMixin
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+
+#importált modulok
 from textRecognition.textDemo import findText
 from faceDetection.faceDemo import findFace
 from carPlateRecognition.plateDemo import findPlate
@@ -65,6 +67,7 @@ class Images(db.Model):
     faceFound = db.Column(db.Boolean, default=False)
     textFound = db.Column(db.Boolean, default=False)
     plateFound = db.Column(db.Boolean, default=False)
+    nothingFound = db.Column(db.Boolean, default=False)
 
 
 @app.route('/', methods=['GET'])
@@ -162,25 +165,28 @@ def upload():
         hasText = findText(image_path)
         hasFace = findFace(image_path)
         hasPlate = findPlate(image_path)
+        hasNothing = findFace(image_path) and findText(image_path) and findPlate(image_path) is False
 
         getFacesFrom = Images.query.filter_by(owner_id=user.id, faceFound=True).all()  # ezek listak lesznek
         getTextFrom = Images.query.filter_by(owner_id=user.id, textFound=True).all()
         getPlateFrom = Images.query.filter_by(owner_id=user.id, plateFound=True).all()
         getNothingFrom = Images.query.filter_by(owner_id=user.id, faceFound=False, textFound=False, plateFound=False).all()
 
-        print(getFacesFrom)
-        print(getTextFrom)
-        print(getPlateFrom)
-        print(getNothingFrom)
+        print("ezeken a kepeken talalt arcot: " + str(getFacesFrom))
+        print("ezeken a kepeken talalt szoveget: " + str(getTextFrom))
+        print("ezeken a kepeken talalt rendszamot: " + str(getPlateFrom))
+        print("ezeken a kepeken semmit nem talalt: " + str(getNothingFrom))
 
         if (hasText or hasFace or hasPlate):
-            newFile = Images(name=file.filename, fp=os.path.abspath(image_path), owner_id=user.id, faceFound=hasFace, textFound=hasText, plateFound=hasPlate)
+            newFile = Images(name=file.filename, fp=os.path.relpath(image_path), owner_id=user.id, faceFound=hasFace, textFound=hasText, plateFound=hasPlate, nothingFound=hasNothing)
+            print(hasNothing)
             db.session.add(newFile)
             db.session.commit()
             return {"message": "sikeres "}, 200
 
         elif (hasText is False and hasFace is False and hasPlate is False):
-            anotherFile = Images(name=file.filename, fp=os.path.abspath(image_path), owner_id=user.id, faceFound=False, textFound=False, plateFound=False)
+            anotherFile = Images(name=file.filename, fp=os.path.relpath(image_path), owner_id=user.id, faceFound=False, textFound=False, plateFound=False,  nothingFound=True)
+            print(hasNothing)
             db.session.add(anotherFile)
             db.session.commit()
             return {"message": "sikeres "}, 200
@@ -197,6 +203,7 @@ def get_images():
         print(info)
         user = info['user']
         images = Images.query.filter_by(owner_id=user.id).all()
+        #getNothingFrom = Images.query.filter_by(owner_id=user.id, faceFound=False, textFound=False, plateFound=False).all()
         images_alt = []
         for image in images:
             i = {}
@@ -207,6 +214,7 @@ def get_images():
             i["faceFound"] = image.faceFound
             i["textFound"] = image.textFound
             i["plateFound"] = image.plateFound
+            i["nothingFound"] = image.nothingFound
             images_alt.append(i)
         return jsonify({
             'result' : images_alt
