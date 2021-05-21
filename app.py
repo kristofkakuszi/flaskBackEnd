@@ -3,6 +3,7 @@ import os
 import time
 import uuid
 import zipfile
+from zipfile import ZipFile
 
 from flask import Flask, send_from_directory, request, jsonify, make_response
 from flask_login import UserMixin
@@ -162,10 +163,11 @@ def upload():
         print("kep eleresi utvonala: " + str(image_path))
 
         file.save(image_path)
+
         hasText = findText(image_path)
         hasFace = findFace(image_path)
         hasPlate = findPlate(image_path)
-        hasNothing = findFace(image_path) and findText(image_path) and findPlate(image_path) is False
+        hasNothing = findFace(image_path) is False and findText(image_path) is False and findPlate(image_path) is False
 
         getFacesFrom = Images.query.filter_by(owner_id=user.id, faceFound=True).all()  # ezek listak lesznek
         getTextFrom = Images.query.filter_by(owner_id=user.id, textFound=True).all()
@@ -246,26 +248,19 @@ def logout():
     token = request.headers.get('auth-token')
     tokens.pop(token)
 
-"""
-@app.route('/download', methods=['GET','POST'])
-def download():
 
-    #filePath =
+@app.route('/downloadImages', methods=['POST'])
+def download(imageList):
 
-    fileobj = io.BytesIO()
-    with zipfile.ZipFile(fileobj, 'w') as zip_file:
-        zip_info = zipfile.ZipInfo(filePath)
-        zip_info.date_time = time.localtime(time.time())[:6]
-        zip_info.compress_type = zipfile.ZIP_DEFLATED
-        with open(filePath, 'rb') as fd:
-            zip_file.writestr(zip_info, fd.read())
-    fileobj.seek(0)
+    dow_object = request.get_json()
+    downloadList = dow_object['dow_object']
+    print(type(downloadList))
 
-    response = make_response(fileobj.read())
-    response.headers.set('Content-Type', 'zip')
-    response.headers.set('Content-Disposition', 'attachment', filename='%s.zip' % os.path.basename(filePath))
-    return response
-"""
+
+
+    return jsonify({'succes' : 'result'})
+#return send_from_directory(mappanev,zipnev,as_attachment=True)
+
 
 if __name__ == '__main__':
     app.run()
