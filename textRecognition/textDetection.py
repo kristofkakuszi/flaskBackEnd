@@ -1,6 +1,7 @@
 #futtatás
 #python textRecognition/textDetection.py --image ./uploads/sign.jpg --east textRecognition/frozen_east_text_detection.pb
 #python textRecognition/textDetection.py --image ./uploads/telephone.jpg --east textRecognition/frozen_east_text_detection.pb
+#python textRecognition/textDetection.py --image ./uploads/telephone.jpg --east frozen_east_text_detection.pb
 
 
 #ennek kép az inputa

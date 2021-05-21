@@ -47,6 +47,20 @@ def verifyToken(token):
     else:
         return False
 
+def get_all_file_paths(directory):
+
+	# initializing empty file paths list
+	file_paths = []
+
+	# crawling through directory and subdirectories
+	for root, directories, files in os.walk(directory):
+		for filename in files:
+			# join the two strings in order to form the full filepath.
+			filepath = os.path.join(root, filename)
+			file_paths.append(filepath)
+
+	# returning all file paths
+	return file_paths
 
 class User(UserMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -84,8 +98,14 @@ def register():
     return send_from_directory('templates', 'index.html')
 
 @app.route('/landing')
-def landing(): #talan hogy hi %aki benne van%
-    return send_from_directory('templates', 'index.html')
+def landing():
+    token = request.headers.get('auth-token')
+
+    if not token:
+        print("nincs token szoval nincs feltotltes")
+        return {"message": "Sikertelen"}, 401
+    else:
+        return send_from_directory('templates', 'index.html')
 
 @app.route('/<path:filename>', methods=['GET'])
 def send_path(filename):#fajlok betolteseere szolgal
@@ -161,6 +181,7 @@ def upload():
 
         image_path = os.path.join(user_dir, str(uuid.uuid4()) + "." + str(file.filename).split(".")[-1])
         print("kep eleresi utvonala: " + str(image_path))
+        print("mappa ahova mennek: " + str(user_dir))
 
         file.save(image_path)
 
@@ -200,9 +221,11 @@ def upload():
 def get_images():
 
     token = request.headers.get('auth-token')
+    print(token)
     if verifyToken(token):
         info = tokens[token]
-        print(info)
+        #print(info)
+        #print(token)
         user = info['user']
         images = Images.query.filter_by(owner_id=user.id).all()
         #getNothingFrom = Images.query.filter_by(owner_id=user.id, faceFound=False, textFound=False, plateFound=False).all()
@@ -252,14 +275,41 @@ def logout():
 @app.route('/downloadImages', methods=['POST'])
 def download(imageList):
 
+    token = request.headers.get('auth-token')
+
+    if verifyToken(token):
+        info = tokens[token]
+        print(info)
+        user = info['user']
+        user_dir = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id))
+        #user_dir amhol vannak a mappák
+
+    directory = './vmi'
+
+    file_paths = get_all_file_paths(directory)
+
+    # printing the list of all files to be zipped
+    print('Following files will be zipped:')
+    for file_name in file_paths:
+        print(file_name)
+
+    # writing files to a zipfile
+    with ZipFile('pictures.zip', 'w') as zip:
+        # writing each file one by one
+        for file in file_paths:
+            zip.write(file)
+
+    print('All files zipped successfully!')
+
+"""
     dow_object = request.get_json()
     downloadList = dow_object['dow_object']
     print(type(downloadList))
-
-
-
     return jsonify({'succes' : 'result'})
-#return send_from_directory(mappanev,zipnev,as_attachment=True)
+#return send_from_directory(user_dir,"pictures.zip",as_attachment=True)
+"""
+
+
 
 
 if __name__ == '__main__':
