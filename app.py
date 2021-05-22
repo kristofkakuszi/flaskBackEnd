@@ -47,21 +47,6 @@ def verifyToken(token):
     else:
         return False
 
-def get_all_file_paths(directory):
-
-	# initializing empty file paths list
-	file_paths = []
-
-	# crawling through directory and subdirectories
-	for root, directories, files in os.walk(directory):
-		for filename in files:
-			# join the two strings in order to form the full filepath.
-			filepath = os.path.join(root, filename)
-			file_paths.append(filepath)
-
-	# returning all file paths
-	return file_paths
-
 class User(UserMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(32), index=True)
@@ -189,19 +174,17 @@ def upload():
         hasText = findText(image_path)
         hasFace = findFace(image_path)
         hasPlate = findPlate(image_path)
-        hasNothing = findFace(image_path) is False and findText(image_path) is False and findPlate(image_path) is False
+        hasNothing = hasPlate is False and hasFace is False and hasText is False
 
-        getFacesFrom = Images.query.filter_by(owner_id=user.id, faceFound=True).all()  # ezek listak lesznek
-        getTextFrom = Images.query.filter_by(owner_id=user.id, textFound=True).all()
-        getPlateFrom = Images.query.filter_by(owner_id=user.id, plateFound=True).all()
-        getNothingFrom = Images.query.filter_by(owner_id=user.id, faceFound=False, textFound=False, plateFound=False).all()
+        #getFacesFrom = Images.query.filter_by(owner_id=user.id, faceFound=True).all()  # ezek listak lesznek
+        #getTextFrom = Images.query.filter_by(owner_id=user.id, textFound=True).all()
+        #getPlateFrom = Images.query.filter_by(owner_id=user.id, plateFound=True).all()
+        #getNothingFrom = Images.query.filter_by(owner_id=user.id, faceFound=False, textFound=False, plateFound=False).all()
 
-
-
-        print("ezeken a kepeken talalt arcot: " + str(getFacesFrom))
-        print("ezeken a kepeken talalt szoveget: " + str(getTextFrom))
-        print("ezeken a kepeken talalt rendszamot: " + str(getPlateFrom))
-        print("ezeken a kepeken semmit nem talalt: " + str(getNothingFrom))
+        #print("ezeken a kepeken talalt arcot: " + str(getFacesFrom))
+        #print("ezeken a kepeken talalt szoveget: " + str(getTextFrom))
+        #print("ezeken a kepeken talalt rendszamot: " + str(getPlateFrom))
+        #print("ezeken a kepeken semmit nem talalt: " + str(getNothingFrom))
 
         if (hasText or hasFace or hasPlate):
             newFile = Images(name=file.filename, fp=os.path.relpath(image_path), owner_id=user.id, faceFound=hasFace, textFound=hasText, plateFound=hasPlate, nothingFound=hasNothing)
@@ -276,57 +259,30 @@ def logout():
 
 
 @app.route('/downloadImages', methods=['POST'])
-def download(imageList):
+def download():
 
-#megkapom a listat
-#listaban benne lesznek a kepek
-# akkor ezeknek lekerem az id-jat, és fp-jat egy valtozoba
-#ezeken filter byal id alapjan rendezni
-
-    down_object = request.get_json()
-    imageList = down_object['downBtn']
-    print(type(imageList))
-
+    imageList = request.get_json()
+    print(imageList)
 
     token = request.headers.get('auth-token')
-
+    file_path = []
 
     if verifyToken(token):
         info = tokens[token]
         print(info)
         user = info['user']
+        for id in imageList:
+            file_path.append(Images.query.filter_by(owner_id=user.id, id=id).first().fp)
 
-       # selectedImages = Images.query.filter_by(owner_id=user.id, id= ,fp= )
+    user_dir = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id))
+    zipFileName = str(uuid.uuid4())+".zip"
+    zipFilePath = os.path.join(user_dir, zipFileName)
 
-        user_dir = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id))
-        #user_dir amhol vannak a mappák
-
-    directory = './vmi'
-
-    file_paths = get_all_file_paths(directory)
-
-    # printing the list of all files to be zipped
-    print('Following files will be zipped:')
-    for file_name in file_paths:
-        print(file_name)
-
-    # writing files to a zipfile
-    with ZipFile('pictures.zip', 'w') as zip:
-        # writing each file one by one
-        for file in file_paths:
+    with ZipFile(zipFilePath, 'w') as zip:
+        for file in file_path:
             zip.write(file)
 
-    print('All files zipped successfully!')
-
-"""
-    dow_object = request.get_json()
-    downloadList = dow_object['dow_object']
-    print(type(downloadList))
-    return jsonify({'succes' : 'result'})
-#return send_from_directory(user_dir,"pictures.zip",as_attachment=True)
-"""
-
-
+    return send_from_directory(user_dir,zipFileName,as_attachment=True)
 
 
 if __name__ == '__main__':
