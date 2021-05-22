@@ -437,21 +437,21 @@ class LandingComponent {
         });
     }
     addImage(image) {
-        if (!this.containsImage(image)) {
-            this.selectedImages.push(image);
+        if (!this.containsImage(image["id"])) {
+            this.selectedImages.push(image["id"]);
             console.log(this.selectedImages);
             console.log(typeof this.selectedImages);
         }
         else {
             this.selectedImages.forEach((element, index) => {
-                if (element == image) {
+                if (element == image["id"]) {
                     this.selectedImages.splice(index, 1);
                 }
             });
         }
     }
     containsImage(image) {
-        return this.selectedImages.includes(image);
+        return this.selectedImages.includes(image["id"]);
     }
     onDownload(selectedImages) {
         const postImg$ = this.httpService.post("/downloadImages", selectedImages);
@@ -521,7 +521,7 @@ class LandingComponent {
     }
 }
 LandingComponent.ɵfac = function LandingComponent_Factory(t) { return new (t || LandingComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_1__["HttpClient"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_hero_service__WEBPACK_IMPORTED_MODULE_2__["HeroService"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_router__WEBPACK_IMPORTED_MODULE_3__["Router"]), _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_angular_forms__WEBPACK_IMPORTED_MODULE_4__["FormBuilder"])); };
-LandingComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: LandingComponent, selectors: [["ng-component"]], decls: 35, vars: 5, consts: [[1, "doboz"], ["type", "file", "name", "file", "id", "fileInput", "multiple", "", "onchange", "console.log(event.target.files)", "accept", "image/*", "enctype", "multipart/form-data", "required", "", 1, "file-input", 3, "change"], ["fileUpload", ""], [1, "file-upload"], ["mat-mini-fab", "", "color", "primary", 1, "upload-btn", 3, "click"], [1, "logout"], ["type", "button", 1, "logout-btn", 3, "click"], ["type", "button", 1, "download-btn", 3, "click"], [1, "gallery"], [1, "container-fluid"], [1, "row"], [1, "col-sm"], ["id", "cim"], [4, "ngFor", "ngForOf"], ["id", "cim "], [1, "rounded-circle", "z-depth-2", 3, "src", "click"], [4, "ngIf"]], template: function LandingComponent_Template(rf, ctx) { if (rf & 1) {
+LandingComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: LandingComponent, selectors: [["ng-component"]], decls: 35, vars: 5, consts: [[1, "doboz"], ["type", "file", "name", "file", "id", "fileInput", "multiple", "", "onchange", "console.log(event.target.files)", "accept", "image/*", "enctype", "multipart/form-data", "required", "", 1, "file-input", 3, "change"], ["fileUpload", ""], [1, "file-upload"], ["mat-mini-fab", "", "color", "primary", 1, "upload-btn", 3, "click"], [1, "logout"], ["type", "button", 1, "logout-btn", 3, "click"], ["id", "downBtn", "type", "button", 1, "download-btn", 3, "click"], [1, "gallery"], [1, "container-fluid"], [1, "row"], [1, "col-sm"], ["id", "cim"], [4, "ngFor", "ngForOf"], ["id", "cim "], [1, "rounded-circle", "z-depth-2", 3, "src", "click"], [4, "ngIf"]], template: function LandingComponent_Template(rf, ctx) { if (rf & 1) {
         const _r21 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "h2");

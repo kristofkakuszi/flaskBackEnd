@@ -196,6 +196,8 @@ def upload():
         getPlateFrom = Images.query.filter_by(owner_id=user.id, plateFound=True).all()
         getNothingFrom = Images.query.filter_by(owner_id=user.id, faceFound=False, textFound=False, plateFound=False).all()
 
+
+
         print("ezeken a kepeken talalt arcot: " + str(getFacesFrom))
         print("ezeken a kepeken talalt szoveget: " + str(getTextFrom))
         print("ezeken a kepeken talalt rendszamot: " + str(getPlateFrom))
@@ -281,8 +283,13 @@ def download(imageList):
 # akkor ezeknek lekerem az id-jat, és fp-jat egy valtozoba
 #ezeken filter byal id alapjan rendezni
 
+    down_object = request.get_json()
+    imageList = down_object['downBtn']
+    print(type(imageList))
+
 
     token = request.headers.get('auth-token')
+
 
     if verifyToken(token):
         info = tokens[token]
