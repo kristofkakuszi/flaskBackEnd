@@ -129,6 +129,7 @@ def login_post():
             'token' : token
         }
         print("user id-ja: " + str(user.id))
+        print(tokens)
 
         return jsonify({
             'result': True,
@@ -275,12 +276,21 @@ def logout():
 @app.route('/downloadImages', methods=['POST'])
 def download(imageList):
 
+#megkapom a listat
+#listaban benne lesznek a kepek
+# akkor ezeknek lekerem az id-jat, és fp-jat egy valtozoba
+#ezeken filter byal id alapjan rendezni
+
+
     token = request.headers.get('auth-token')
 
     if verifyToken(token):
         info = tokens[token]
         print(info)
         user = info['user']
+
+       # selectedImages = Images.query.filter_by(owner_id=user.id, id= ,fp= )
+
         user_dir = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id))
         #user_dir amhol vannak a mappák
 
